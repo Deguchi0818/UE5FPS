@@ -6,6 +6,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "LobbyGameMode.h"
+#include "GameFramework/PlayerStart.h"
+#include "GameFramework/PlayerState.h"
 
 
 void AGameStartGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -23,7 +25,7 @@ void AGameStartGameState::BeginPlay()
     if (HasAuthority()) // サーバーのみで実行
     {
         GetWorld()->GetTimerManager().SetTimer(CheckTimerHandle, this,
-            &AGameStartGameState::CheckPlayerCount, 1.0f, true);
+            &AGameStartGameState::CheckPlayerCount, 0.5f, true);
     }
 }
 
@@ -38,6 +40,7 @@ void AGameStartGameState::CheckPlayerCount()
     if (NumPlayers >= ALobbyGameMode::MaxPlayers)
     {
         StartCountdown(3);
+        GetWorld()->GetTimerManager().ClearTimer(CheckTimerHandle);
     }
 }
 
@@ -50,6 +53,31 @@ void AGameStartGameState::StartCountdown(int32 InSeconds)
     RemainingTime = InSeconds;
     GetWorld()->GetTimerManager().SetTimer(CountdownTimerHandle, this,
         &AGameStartGameState::TickCountdown, 1.0f, true);
+
+    ResetPosition();
+}
+
+
+void AGameStartGameState::ResetPosition()
+{
+    TArray<AActor*> StartPoints;
+    UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), StartPoints);
+
+    for (int32 i = 0; i < PlayerArray.Num(); ++i)
+    {
+        if (!StartPoints.IsValidIndex(i))
+            break;
+
+        APlayerState* PS = PlayerArray[i];
+        APlayerController* PC = Cast<APlayerController>(PS->GetOwner());
+        if (!PC) continue;
+
+        APawn* Pawn = PC->GetPawn();
+        if (!Pawn) continue;
+
+        Pawn->SetActorLocation(StartPoints[i]->GetActorLocation());
+        Pawn->SetActorRotation(StartPoints[i]->GetActorRotation());
+    }
 }
 
 

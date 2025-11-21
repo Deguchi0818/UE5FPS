@@ -45,7 +45,8 @@ FString ALobbyGameMode::InitNewPlayer(APlayerController* NewPlayer, const FUniqu
         if (APlayerState* PS = NewPlayer->GetPlayerState<APlayerState>())
         {
             PS->SetPlayerName(DecodedName);
-            UKismetSystemLibrary::PrintString(this, TEXT("Join - ") + DecodedName,
+            auto str = FString::Printf(TEXT("Join: %s"), *DecodedName);
+            UKismetSystemLibrary::PrintString(this, str,
                 true, true, FColor::Green, 6.f, TEXT("None"));
         }
     }

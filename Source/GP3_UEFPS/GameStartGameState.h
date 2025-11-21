@@ -28,6 +28,10 @@ public:
 
 	void OnRep_GameStarted();
 
+	bool isGameStarted() const { return bGameStarted; }
+
+	void ResetPosition();
+
 protected:
 	UPROPERTY(Replicated)
 	bool bGameStarted;
