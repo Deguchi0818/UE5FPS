@@ -56,7 +56,7 @@ void USessionSubsystem::CreateLanSession(int32 PublicConnections)
     Settings.bShouldAdvertise = true;  // Find に出す
     Settings.bAllowJoinInProgress = true;  // 途中参加OK
     Settings.bUsesPresence = true;     // Presenceを有効にしてマッチング可視化
-    Settings.bUseLobbiesIfAvailable = false; // Null/LANではロビー機能は使わない
+    Settings.bUseLobbiesIfAvailable = true; // Steamロビーを使う
     Settings.NumPublicConnections = FMath::Max(1, PublicConnections); // 参加枠（ホスト除く枠数でOK）
     Settings.bAllowJoinViaPresence = true;
 
