@@ -1,9 +1,9 @@
-ï»¿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "FpsPlayerController.h"
 #include "GameStartGameState.h"
-
+#include "Blueprint/UserWidget.h"
 
 void AFpsPlayerController::Tick(float deltaSeconds)
 {
@@ -13,9 +13,34 @@ void AFpsPlayerController::Tick(float deltaSeconds)
     if (!GS)
         return;
 
-    const bool bStarted = GS->isGameStarted();
+    const bool bStarted = GS->isGameStarted() && !GS->isGameFinished();
 
-    // ã‚«ã‚¦ãƒ³ãƒˆãƒ€ã‚¦ãƒ³ä¸­ã¯ä¸€åˆ‡å‹•ã‹ã•ãªã„
+    // ƒJƒEƒ“ƒgƒ_ƒEƒ“’†‚ÍˆêØ“®‚©‚³‚È‚¢
     SetIgnoreMoveInput(!bStarted);
     SetIgnoreLookInput(!bStarted);
+}
+
+void AFpsPlayerController::BeginPlay()
+{
+    Super::BeginPlay();
+
+    AGameStartGameState* GS = GetWorld()->GetGameState<AGameStartGameState>();
+    if (!GS)
+        return;
+
+    // ===== GameState ‚Ì’Ê’m‚É Bind =====
+    GS->OnGameFinished.AddDynamic(this, &AFpsPlayerController::HandleGameFinished);
+}
+
+void AFpsPlayerController::HandleGameFinished(int winner)
+{
+    ResultOverlayWidget = CreateWidget<UUserWidget>(
+        this,
+        ResultOverlayWidgetClass
+    );
+
+    ResultOverlayWidget->AddToViewport();
+
+    bShowMouseCursor = true;
+    SetInputMode(FInputModeUIOnly());
 }

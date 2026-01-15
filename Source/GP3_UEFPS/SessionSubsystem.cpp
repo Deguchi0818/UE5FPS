@@ -1,4 +1,4 @@
-ï»¿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SessionSubsystem.h"
@@ -7,15 +7,15 @@
 #include "GameFramework/PlayerController.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
 
-// ãƒ¦ãƒ¼ã‚¶ãƒ¼å
-static const FString UserName = TEXT("ãªã¾ãˆ");
+// ƒ†[ƒU[–¼
+static const FString UserName = TEXT("Deguchi");
 
-// UEå´ã§ä¸€èˆ¬çš„ã«ä½¿ã‚ã‚Œã‚‹å›ºå®šåï¼ˆ"GameSession"ï¼‰
+// UE‘¤‚Åˆê”Ê“I‚Ég‚í‚ê‚éŒÅ’è–¼i"GameSession"j
 static const FName SESSION_NAME = NAME_GameSession;
 
 bool USessionSubsystem::EnsureOnline()
 {
-    // Online Subsystem ã‚’å–å¾—ï¼ˆNull: LAN / Steam: Steam / EOS: Epic ãªã©ãƒ—ãƒ©ãƒƒãƒˆãƒ•ã‚©ãƒ¼ãƒ åˆ¥ã«åˆ‡æ›¿ï¼‰
+    // Online Subsystem ‚ğæ“¾iNull: LAN / Steam: Steam / EOS: Epic ‚È‚Çƒvƒ‰ƒbƒgƒtƒH[ƒ€•Ê‚ÉØ‘Öj
     if (!OSS) OSS = IOnlineSubsystem::Get();
     if (!OSS) { UE_LOG(LogTemp, Error, TEXT("No OnlineSubsystem")); return false; }
 
@@ -43,34 +43,34 @@ void USessionSubsystem::CreateLanSession(int32 PublicConnections)
 {
     if (!EnsureOnline()) return;
 
-    // æ—¢ã«åŒåã‚»ãƒƒã‚·ãƒ§ãƒ³ãŒæ®‹ã£ã¦ã„ãŸã‚‰ç ´æ£„ã—ã¦ã‹ã‚‰å†ä½œæˆ
+    // Šù‚É“¯–¼ƒZƒbƒVƒ‡ƒ“‚ªc‚Á‚Ä‚¢‚½‚ç”jŠü‚µ‚Ä‚©‚çÄì¬
     if (Session->GetNamedSession(SESSION_NAME))
     {
         DestroyThenRecreate(PublicConnections);
         return;
     }
 
-    // === ã‚»ãƒƒã‚·ãƒ§ãƒ³è¨­å®š ===
+    // === ƒZƒbƒVƒ‡ƒ“İ’è ===
     FOnlineSessionSettings Settings;
-    Settings.bIsLANMatch = false;      // LANã§ã¯ãªãã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒƒãƒˆã«
-    Settings.bShouldAdvertise = true;  // Find ã«å‡ºã™
-    Settings.bAllowJoinInProgress = true;  // é€”ä¸­å‚åŠ OK
-    Settings.bUsesPresence = true;     // Presenceã‚’æœ‰åŠ¹ã«ã—ã¦ãƒãƒƒãƒãƒ³ã‚°å¯è¦–åŒ–
-    Settings.bUseLobbiesIfAvailable = true; // Steamãƒ­ãƒ“ãƒ¼ã‚’ä½¿ã†
-    Settings.NumPublicConnections = FMath::Max(1, PublicConnections); // å‚åŠ æ ï¼ˆãƒ›ã‚¹ãƒˆé™¤ãæ æ•°ã§OKï¼‰
+    Settings.bIsLANMatch = false;      // LAN‚Å‚Í‚È‚­ƒCƒ“ƒ^[ƒlƒbƒg‚É
+    Settings.bShouldAdvertise = true;  // Find ‚Éo‚·
+    Settings.bAllowJoinInProgress = true;  // “r’†Q‰ÁOK
+    Settings.bUsesPresence = true;     // Presence‚ğ—LŒø‚É‚µ‚Äƒ}ƒbƒ`ƒ“ƒO‰Â‹‰»
+    Settings.bUseLobbiesIfAvailable = true; // Steamƒƒr[‚ğg‚¤
+    Settings.NumPublicConnections = FMath::Max(1, PublicConnections); // Q‰Á˜giƒzƒXƒgœ‚­˜g”‚ÅOKj
     Settings.bAllowJoinViaPresence = true;
 
-    // éƒ¨å±‹ã®åå‰ã‚’è¨­å®š
+    // •”‰®‚Ì–¼‘O‚ğİ’è
     Settings.Set(FName("SERVER_NAME_KEY"), UserName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
-    // ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ç™»éŒ²
+    // ƒR[ƒ‹ƒoƒbƒN“o˜^
     ClearDelegates();
     OnCreateHandle = Session->AddOnCreateSessionCompleteDelegate_Handle(
         FOnCreateSessionCompleteDelegate::CreateUObject(this, &USessionSubsystem::OnCreateComplete));
     OnStartHandle = Session->AddOnStartSessionCompleteDelegate_Handle(
         FOnStartSessionCompleteDelegate::CreateUObject(this, &USessionSubsystem::OnStartComplete));
 
-    // å®Ÿè¡Œï¼ˆUserIndex=0ã§OKã€‚è¤‡æ•°LocalPlayerãŒã‚ã‚‹å ´åˆã¯åˆ‡æ›¿ï¼‰
+    // ÀsiUserIndex=0‚ÅOKB•¡”LocalPlayer‚ª‚ ‚éê‡‚ÍØ‘Öj
     const bool bIssued = Session->CreateSession(/*LocalUserNum=*/0, SESSION_NAME, Settings);
     if (!bIssued)
     {
@@ -96,22 +96,19 @@ void USessionSubsystem::OnCreateComplete(FName, bool bOk)
     OnCreateFinished.Broadcast(bOk);
     if (!bOk) { ClearDelegates(); return; }
 
-    const FString CurrentMap = GetWorld()->GetOutermost()->GetName(); // "/Game/Maps/Lobby" ãªã©
+    const FString CurrentMap = GetWorld()->GetOutermost()->GetName(); // "/Game/Maps/Lobby" ‚È‚Ç
+    if (IOnlineSubsystem* os = IOnlineSubsystem::Get())
+    {
+        if (IOnlineSessionPtr sess = os->GetSessionInterface())
+        {
+            // ƒZƒbƒVƒ‡ƒ“ŠJni“à•”ó‘Ô‚ğuƒXƒ^[ƒgv‚Éj
+            sess->StartSession(NAME_GameSession);
+            UKismetSystemLibrary::PrintString(this, "OnCreateComplete: Success!!",
+                true, true, FColor::Cyan, 4.f, TEXT("None"));
+        }
+    }
     UGameplayStatics::OpenLevel(GetWorld(), FName(*CurrentMap), true, TEXT("?listen"));
 
-    // 1ãƒ•ãƒ¬ãƒ¼ãƒ /æ•°ç™¾msé…ã‚‰ã›ã¦ã‹ã‚‰ StartSessionï¼ˆNetDriver ãŒãƒãƒ¼ãƒˆç¢ºå®šå¾Œï¼‰
-    FTimerHandle Th;
-    GetWorld()->GetTimerManager().SetTimer(Th, [this]()
-        {
-            if (IOnlineSubsystem* OSS = IOnlineSubsystem::Get())
-                if (IOnlineSessionPtr Session = OSS->GetSessionInterface())
-                {
-                    // ã‚»ãƒƒã‚·ãƒ§ãƒ³é–‹å§‹ï¼ˆå†…éƒ¨çŠ¶æ…‹ã‚’ã€Œã‚¹ã‚¿ãƒ¼ãƒˆã€ã«ï¼‰
-                    Session->StartSession(NAME_GameSession);
-                    UKismetSystemLibrary::PrintString(this, "OnCreateComplete: Success!!",
-                        true, true, FColor::Cyan, 4.f, TEXT("None"));
-                }
-        }, 0.5f, false);
 
 }
 
@@ -124,9 +121,9 @@ void USessionSubsystem::FindLanSessions(int32 MaxResults)
 {
     if (!EnsureOnline()) return;
 
-    // æ¤œç´¢æ¡ä»¶ã‚’ä½œã‚‹
+    // ŒŸõğŒ‚ğì‚é
     LastSearch = MakeShared<FOnlineSessionSearch>();
-    LastSearch->bIsLanQuery = true;               // LAN ã«é™å®š
+    LastSearch->bIsLanQuery = true;               // LAN ‚ÉŒÀ’è
     LastSearch->MaxSearchResults = FMath::Clamp(MaxResults, 1, 2000);
     LastSearch->QuerySettings.Set(SEARCH_PRESENCE, false, EOnlineComparisonOp::Equals);
 
@@ -153,7 +150,7 @@ void USessionSubsystem::OnFindComplete(bool bOk)
         for (const auto& R : LastSearch->SearchResults)
         {
             FFoundSessionRow Row;
-            Row.DisplayName = R.Session.OwningUserName; // è¡¨ç¤ºåï¼ˆUIã®éƒ¨å±‹åã«ä½¿ã†ï¼‰
+            Row.DisplayName = R.Session.OwningUserName; // •\¦–¼iUI‚Ì•”‰®–¼‚Ég‚¤j
             Row.PingMs = R.PingInMs;
             Row.OpenConnections = R.Session.NumOpenPublicConnections;
             Row.MaxConnections = R.Session.SessionSettings.NumPublicConnections;
@@ -165,7 +162,7 @@ void USessionSubsystem::OnFindComplete(bool bOk)
             FString room = TEXT("Unknown");
             R.Session.SessionSettings.Get(FName("SERVER_NAME_KEY"), room);
 
-            // è¦‹ã¤ã‘ãŸã‚»ãƒƒã‚·ãƒ§ãƒ³ã«ãã®ã¾ã¾ã‚¸ãƒ§ã‚¤ãƒ³
+            // Œ©‚Â‚¯‚½ƒZƒbƒVƒ‡ƒ“‚É‚»‚Ì‚Ü‚ÜƒWƒ‡ƒCƒ“
             JoinBySearchIndex(Index);
 
             Index++;
@@ -203,7 +200,7 @@ void USessionSubsystem::OnJoinComplete(FName, EOnJoinSessionCompleteResult::Type
 
     if (!bOk) { ClearDelegates(); return; }
 
-    // å‚åŠ å…ˆã®æ¥ç¶šURLã‚’ OnlineSubsystem ã‹ã‚‰è§£æ±ºã—ã€ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆé·ç§»ã™ã‚‹
+    // Q‰Áæ‚ÌÚ‘±URL‚ğ OnlineSubsystem ‚©‚ç‰ğŒˆ‚µAƒNƒ‰ƒCƒAƒ“ƒg‘JˆÚ‚·‚é
     FString addr;
     if (Session->GetResolvedConnectString(SESSION_NAME, addr, NAME_GamePort))
     {

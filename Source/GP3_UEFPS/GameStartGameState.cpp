@@ -1,4 +1,4 @@
-ï»¿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameStartGameState.h"
@@ -15,6 +15,7 @@ void AGameStartGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AGameStartGameState, RemainingTime);
     DOREPLIFETIME(AGameStartGameState, bGameStarted);
+    DOREPLIFETIME(AGameStartGameState, Winner);
 }
 
 
@@ -22,7 +23,7 @@ void AGameStartGameState::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (HasAuthority()) // ã‚µãƒ¼ãƒãƒ¼ã®ã¿ã§å®Ÿè¡Œ
+    if (HasAuthority()) // ƒT[ƒo[‚Ì‚İ‚ÅÀs
     {
         GetWorld()->GetTimerManager().SetTimer(CheckTimerHandle, this,
             &AGameStartGameState::CheckPlayerCount, 0.5f, true);
@@ -47,6 +48,7 @@ void AGameStartGameState::CheckPlayerCount()
 
 void AGameStartGameState::StartCountdown(int32 InSeconds)
 {
+    bFinished = false;
     if (!HasAuthority())
         return;
 
@@ -87,15 +89,15 @@ void AGameStartGameState::TickCountdown()
     {
         GetWorld()->GetTimerManager().ClearTimer(CountdownTimerHandle);
         bGameStarted = true;
-        OnRep_GameStarted(); // æ˜ç¤ºå‘¼ã³å‡ºã—ï¼ˆã‚µãƒ¼ãƒãƒ¼å´ï¼‰
+        Server_GameStarted(); // –¾¦ŒÄ‚Ño‚µiƒT[ƒo[‘¤j
 
-        // ã‚²ãƒ¼ãƒ ã®ã‚«ã‚¦ãƒ³ãƒˆã‚¿ã‚¤ãƒãƒ¼ã‚’ã‚»ãƒƒãƒˆ
+        // ƒQ[ƒ€‚ÌƒJƒEƒ“ƒgƒ^ƒCƒ}[‚ğƒZƒbƒg
         RemainingTime = GameCountMax;
         GetWorld()->GetTimerManager().SetTimer(GameCountTimerHandle, this,
             &AGameStartGameState::TickGameCount, 1.0f, true);
     }
 
-    OnRep_RemainingTime(); // å…¨ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã«æ›´æ–°ã‚’é€šçŸ¥
+    OnRep_RemainingTime(); // ‘SƒNƒ‰ƒCƒAƒ“ƒg‚ÉXV‚ğ’Ê’m
 }
 
 
@@ -103,12 +105,12 @@ void AGameStartGameState::TickGameCount()
 {
     if (--RemainingTime <= 0)
     {
-        // ã‚²ãƒ¼ãƒ çµ‚äº†
+        // ƒQ[ƒ€I—¹
         GetWorld()->GetTimerManager().ClearTimer(GameCountTimerHandle);
-        OnRep_GameEnd(); // æ˜ç¤ºå‘¼ã³å‡ºã—ï¼ˆã‚µãƒ¼ãƒãƒ¼å´ï¼‰
+        Server_GameEnd(); // –¾¦ŒÄ‚Ño‚µiƒT[ƒo[‘¤j
     }
 
-    OnRep_RemainingTime(); // å…¨ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã«æ›´æ–°ã‚’é€šçŸ¥
+    OnRep_RemainingTime(); // ‘SƒNƒ‰ƒCƒAƒ“ƒg‚ÉXV‚ğ’Ê’m
 }
 
 void AGameStartGameState::OnDominate(const FString& zoneName, int teamId)
@@ -123,19 +125,42 @@ void AGameStartGameState::OnRep_RemainingTime()
 }
 
 
-void AGameStartGameState::OnRep_GameStarted()
+void AGameStartGameState::Server_GameStarted()
 {
     UKismetSystemLibrary::PrintString(this, TEXT("Game Start!!"), true, true, FColor::Yellow, 6.f, TEXT("None"));
 }
 
-
-void AGameStartGameState::OnRep_GameEnd()
+void AGameStartGameState::Server_GameEnd()
 {
     UKismetSystemLibrary::PrintString(this, TEXT("Game End!!"), true, true, FColor::Yellow, 6.f, TEXT("None"));
 
+    std::vector<int> counts;
+    counts.assign(ALobbyGameMode::MaxPlayers, 0);
+
     for (auto& pair : DominatedTeamMap)
     {
-        FString str = FString::Printf(TEXT("Zone:%s dominate - %d"), *pair.first, pair.second);
-        UKismetSystemLibrary::PrintString(this, str, true, true, FColor::Green, 6.f, TEXT("None"));
+		counts[pair.second]++;
     }
+
+	auto itMax = std::ranges::max_element(counts);
+
+	auto hasWinner = std::ranges::count(counts, *itMax) == 1;
+    if (hasWinner) {
+		Winner = itMax - counts.begin();
+	}
+    else
+    {
+        Winner = -1;
+    }
+    Winner = 3;
+    OnRep_GameFinish();
+}
+
+void AGameStartGameState::OnRep_GameFinish()
+{
+    FString str = FString::Printf(TEXT("Winner - %d"), Winner);
+    UKismetSystemLibrary::PrintString(this, str, true, true, FColor::Green, 8.f, TEXT("None"));
+
+    bFinished = true;
+    OnGameFinished.Broadcast(Winner);
 }

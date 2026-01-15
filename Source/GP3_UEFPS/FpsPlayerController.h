@@ -13,7 +13,18 @@ UCLASS()
 class GP3_UEFPS_API AFpsPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void HandleGameFinished(int winner);
+
+	// Result表示用Widgetクラス
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> ResultOverlayWidgetClass;
+
+	// 実体（重複生成防止用）
+	UPROPERTY()
+	UUserWidget* ResultOverlayWidget = nullptr;
 protected:
 	virtual void Tick(float deltaSeconds) override;
 };

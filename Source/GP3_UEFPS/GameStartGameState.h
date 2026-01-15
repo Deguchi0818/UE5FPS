@@ -10,6 +10,7 @@
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameFinished, int, V);
 UCLASS()
 class GP3_UEFPS_API AGameStartGameState : public AGameStateBase
 {
@@ -29,15 +30,22 @@ public:
 	UFUNCTION()
 	void OnRep_RemainingTime();
 
-	void OnRep_GameStarted();
+	void Server_GameStarted();
 
-	void OnRep_GameEnd();
+	void Server_GameEnd();
 
 	bool isGameStarted() const { return bGameStarted; }
 
 	void ResetPosition();
 
 	void OnDominate(const FString& zoneName, int teamId);
+
+	UFUNCTION()
+	void OnRep_GameFinish();
+	bool isGameFinished() const { return bFinished; }
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGameFinished OnGameFinished;
 
 protected:
 	UPROPERTY(Replicated)
@@ -52,4 +60,9 @@ protected:
 
 	static constexpr int GameCountMax = 60;
 	std::map<FString, int> DominatedTeamMap;
+
+	UPROPERTY(ReplicatedUsing = OnRep_GameFinish, BlueprintReadOnly)
+	int Winner;
+
+	bool bFinished;
 };
